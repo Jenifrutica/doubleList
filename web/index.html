@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NODUS — The Reflex Arc</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="plate" id="plate">
+
+  <header class="plate-head">
+    <div class="title-block">
+      <h1>The Reflex <span>Arc</span></h1>
+      <p class="subtitle">A neural pathway you can edit. Each neuron is one node; the arrows between them are its prev and next links. Select a node, operate on it, then fire the signal.</p>
+    </div>
+    <button type="button" class="help-btn" id="help-open">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 1 1 3.4 2.5c-.7.3-.9.8-.9 1.5"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>
+      How it works
+    </button>
+  </header>
+
+  <section class="steps" aria-label="How to use">
+    <div class="step" id="step-1">
+      <span class="step-num">1</span>
+      <div><strong>Select a neuron</strong><em>Click a cell to place the cursor</em></div>
+    </div>
+    <div class="step" id="step-2">
+      <span class="step-num">2</span>
+      <div><strong>Operate on it</strong><em>Insert, lesion, excite or link</em></div>
+    </div>
+    <div class="step" id="step-3">
+      <span class="step-num">3</span>
+      <div><strong>Fire the signal</strong><em>Watch it travel along the chain</em></div>
+    </div>
+  </section>
+
+  <section class="stage" aria-label="Neural pathway">
+    <div class="stage-bar">
+      <div class="selection">
+        <span class="selection-dot" aria-hidden="true"></span>
+        <div>
+          <span class="selection-label">Selected neuron</span>
+          <div class="selection-line">
+            <span class="selection-name" id="sel-name">—</span>
+            <input type="text" id="rename-input" class="rename-input" maxlength="40" hidden aria-label="Rename the selected neuron">
+            <button type="button" class="rename-btn" id="rename-btn" title="Rename the selected neuron">
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg>
+              Rename
+            </button>
+            <span class="selection-meta" id="sel-meta"></span>
+          </div>
+        </div>
+      </div>
+      <div class="node-schematic" aria-hidden="true">
+        <svg viewBox="0 0 176 50">
+          <defs>
+            <marker id="sch-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="#1c6fd6"/>
+            </marker>
+          </defs>
+          <line class="sch-line" x1="70" y1="26" x2="16" y2="26" marker-end="url(#sch-arrow)"/>
+          <text class="sch-label" x="10" y="16">prev</text>
+          <circle class="sch-node" cx="88" cy="26" r="15"/>
+          <circle class="sch-nucleus" cx="88" cy="26" r="5"/>
+          <line class="sch-line" x1="106" y1="26" x2="160" y2="26" marker-end="url(#sch-arrow)"/>
+          <text class="sch-label" x="132" y="16">next</text>
+          <text class="sch-label" x="84" y="48" text-anchor="middle">node</text>
+        </svg>
+      </div>
+    </div>
+    <div class="stage-scroll" id="stage-scroll">
+      <svg id="scene" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Neural pathway"></svg>
+    </div>
+    <div class="stage-foot">
+      <button type="button" class="toggle" id="pointer-toggle" aria-pressed="true">
+        <span class="toggle-box" aria-hidden="true"></span>
+        <span>Show prev / next arrows</span>
+      </button>
+      <button type="button" class="toggle" id="label-toggle" aria-pressed="true">
+        <span class="toggle-box" aria-hidden="true"></span>
+        <span>Show neuron anatomy</span>
+      </button>
+      <p class="stage-hint" id="stage-hint">Arrow keys move the cursor · Shift + arrows fire the signal.</p>
+    </div>
+  </section>
+
+  <footer class="rail panel" aria-label="Instruments">
+    <div class="cluster">
+      <span class="cluster-label">Select</span>
+      <div class="keys">
+        <button type="button" class="key" data-op="move" data-direction="-1" title="Move the cursor to the previous neuron (←)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><b>Previous</b></span>
+          <small>follow prev</small>
+        </button>
+        <button type="button" class="key" data-op="move" data-direction="1" title="Move the cursor to the next neuron (→)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg><b>Next</b></span>
+          <small>follow next</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="cluster">
+      <span class="cluster-label">Add neuron</span>
+      <input type="text" id="new-name" class="name-input" maxlength="40" placeholder="Name the new neuron (optional)" aria-label="Name of the new neuron">
+      <div class="keys">
+        <button type="button" class="key" data-op="create" data-position="before" title="Create a named neuron before the selected one (O)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v9M7 12h10"/><path d="M5 19h14"/></svg><b>Before</b></span>
+          <small>insert before</small>
+        </button>
+        <button type="button" class="key" data-op="create" data-position="after" title="Create a named neuron after the selected one (I)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v9M7 12h10"/><path d="M5 19h14"/></svg><b>After</b></span>
+          <small>insert after</small>
+        </button>
+        <button type="button" class="key" data-op="create" data-position="end" title="Create a named neuron at the end (A)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h12"/><path d="M12 7l5 5-5 5"/><path d="M20 5v14"/></svg><b>At the end</b></span>
+          <small>append</small>
+        </button>
+        <button type="button" class="key" data-op="create" data-position="start" title="Create a named neuron at the very start">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H8"/><path d="M12 7l-5 5 5 5"/><path d="M4 5v14"/></svg><b>At the start</b></span>
+          <small>prepend</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="cluster">
+      <span class="cluster-label">Remove</span>
+      <div class="keys">
+        <button type="button" class="key" data-op="delete" title="Remove the selected neuron (D)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/><circle cx="12" cy="12" r="9"/></svg><b>Lesion</b></span>
+          <small>delete node</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="cluster">
+      <span class="cluster-label">Cell state</span>
+      <div class="keys">
+        <button type="button" class="key" data-op="excite" title="Depolarise the selected neuron (E)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L5 14h6l-1 8 8-12h-6z"/></svg><b>Excite</b></span>
+          <small>depolarise</small>
+        </button>
+        <button type="button" class="key" data-op="inhibit" title="Hyperpolarise the selected neuron (N)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><b>Inhibit</b></span>
+          <small>hyperpolarise</small>
+        </button>
+        <button type="button" class="key" data-op="toggle_myelin" title="Add or remove the myelin sheath (M)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18"/><rect x="6" y="8" width="4" height="8"/><rect x="12" y="8" width="4" height="8"/></svg><b>Myelin</b></span>
+          <small>faster travel</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="cluster">
+      <span class="cluster-label">Whole pathway</span>
+      <div class="keys">
+        <button type="button" class="key" data-op="reverse" title="Reverse the whole pathway (R)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10l-3-3M17 16H7l3 3"/></svg><b>Reverse</b></span>
+          <small>swap all links</small>
+        </button>
+        <button type="button" class="key" data-op="circle" data-toggle="circular" id="circle-key" title="Open or close the loop into a reflex arc (C)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12a6 6 0 1 1 6 6"/><path d="M12 18l-3-3M12 18l3-3"/></svg><b>Reflex arc</b></span>
+          <small id="circle-sub">close the loop</small>
+        </button>
+        <button type="button" class="key" data-op="rest" title="Recover all membranes (Space)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 3v9l6 3"/></svg><b>Rest</b></span>
+          <small>clear refractory</small>
+        </button>
+        <button type="button" class="key" data-op="reset" title="Reset the pathway">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6"/><path d="M4 5v5h5"/></svg><b>Reset</b></span>
+          <small>start over</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="cluster cluster-signal">
+      <span class="cluster-label">Signal</span>
+      <div class="keys">
+        <button type="button" class="key key-fire" data-op="fire" data-direction="-1" title="Fire the action potential backward (Shift + ←)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/><circle cx="19" cy="12" r="2"/></svg><b>Fire backward</b></span>
+          <small>antidromic</small>
+        </button>
+        <button type="button" class="key key-fire" data-op="fire" data-direction="1" title="Fire the action potential forward (Shift + →)">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/><circle cx="5" cy="12" r="2"/></svg><b>Fire forward</b></span>
+          <small>orthodromic</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="cluster cluster-demo">
+      <span class="cluster-label">Demo</span>
+      <div class="keys">
+        <button type="button" class="key key-demo" id="demo-key" title="Play a guided demonstration">
+          <span class="key-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg><b>Play demo</b></span>
+          <small>guided tour</small>
+        </button>
+      </div>
+    </div>
+
+    <p class="rail-note" id="rail-note" role="status" aria-live="polite">Ready. Select a neuron to begin.</p>
+  </footer>
+
+  <section class="legend panel" aria-label="Figure legend">
+    <h2 class="section-mark">Neurons</h2>
+    <ol class="legend-list" id="legend"></ol>
+    <div class="legend-key">
+      <span class="key-item"><i class="key-swatch key-cursor"></i>cursor</span>
+      <span class="key-item"><i class="key-swatch key-myelin"></i>myelinated</span>
+      <span class="key-item"><i class="key-swatch key-signal"></i>live signal</span>
+    </div>
+  </section>
+
+  <aside class="readout panel" aria-label="Measurements">
+    <h2 class="section-mark">Measurements</h2>
+    <dl class="metrics" id="metrics"></dl>
+    <h2 class="section-mark">Activity</h2>
+    <ul class="log" id="log"></ul>
+    <p class="colophon">A synthetic teaching model. Values are illustrative, not clinical measurements.</p>
+  </aside>
+
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <h2 id="intro-title">How this pathway works</h2>
+    <p>Every neuron you see is one <b>node</b> of a doubly linked list. The arrows between neurons are its <b>prev</b> and <b>next</b> links. You edit the list by editing the drawing.</p>
+    <ol class="intro-steps">
+      <li><span class="step-num">1</span><div><b>Select a neuron</b><span>Click any cell (in the drawing or in the list) to place the cursor — the ringed, highlighted one.</span></div></li>
+      <li><span class="step-num">2</span><div><b>Operate on it</b><span>Insert a neuron before or after it, lesion it, add myelin, excite or inhibit it, reverse the whole chain, or close it into a loop.</span></div></li>
+      <li><span class="step-num">3</span><div><b>Fire the signal</b><span>Send the action potential forward (orthodromic) or backward (antidromic) and read the measurements on the right.</span></div></li>
+    </ol>
+    <div class="intro-actions">
+      <button type="button" class="btn btn-primary" id="intro-demo">Play a short demo</button>
+      <button type="button" class="btn" id="intro-explore">Explore on my own</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# Impeccable design tooling (not needed to run the app)
+.impeccable/
+PRODUCT.md
+DESIGN.md
